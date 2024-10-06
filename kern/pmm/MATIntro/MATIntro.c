@@ -41,9 +41,16 @@ void set_nps(unsigned int nps) { NUM_PAGES = nps; }
  * then returns 1, otherwise returns 0.
  */
 unsigned int at_is_norm(unsigned int page_index) {
-  if (AT[page_index].perm > 1)
-    return 1;
-  return 0;
+  unsigned int perm;
+
+  perm = AT[page_index].perm;
+  if (perm > 1) {
+    perm = 1;
+  } else {
+    perm = 0;
+  }
+
+  return perm;
 }
 
 /**
@@ -61,9 +68,14 @@ void at_set_perm(unsigned int page_index, unsigned int perm) {
  * Returns 0 if the page is not allocated, otherwise returns 1.
  */
 unsigned int at_is_allocated(unsigned int page_index) {
-  if (AT[page_index].allocated > 0)
-    return 1;
-  return 0;
+  unsigned int allocated;
+
+  allocated = AT[page_index].allocated;
+  if (allocated > 0) {
+    allocated = 1;
+  }
+
+  return allocated;
 }
 
 /**

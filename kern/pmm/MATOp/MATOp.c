@@ -1,11 +1,14 @@
 #include "import.h"
 #include <lib/debug.h>
+#include <lib/types.h>
 
 #define PAGESIZE 4096
 #define VM_USERLO 0x40000000
 #define VM_USERHI 0xF0000000
 #define VM_USERLO_PI (VM_USERLO / PAGESIZE)
 #define VM_USERHI_PI (VM_USERHI / PAGESIZE)
+
+static unsigned int last_palloc_index = VM_USERLO_PI;
 
 /**
  * Allocate a physical page.
@@ -20,36 +23,38 @@
  * 2. Optimize the code using memoization so that you do not have to
  *    scan the allocation table from scratch every time.
  */
-
-// Memo variable necessary to optimize palloc()
-static unsigned int last_allocated_page = VM_USERLO_PI;
-
 unsigned int palloc() {
-  // TODO
-  unsigned int total_pages = get_nps();
-  unsigned int i;
+  unsigned int nps;
+  unsigned int palloc_index;
+  unsigned int palloc_free_index;
+  bool first;
 
-  // Start scanning from the last allocated page
-  for (i = last_allocated_page; i < total_pages; i++) {
-    if (at_is_norm(i) && !at_is_allocated(i)) {
-      at_set_allocated(i, 1);
-      last_allocated_page = i + 1; // Memoize the next page to check
-      return i;
+  nps = get_nps();
+  palloc_index = last_palloc_index;
+  palloc_free_index = nps;
+  first = TRUE;
+
+  while ((palloc_index != last_palloc_index || first) &&
+         palloc_free_index == nps) {
+    first = FALSE;
+    if (at_is_norm(palloc_index) && !at_is_allocated(palloc_index)) {
+      palloc_free_index = palloc_index;
+    }
+    palloc_index++;
+    if (palloc_index >= VM_USERHI_PI) {
+      palloc_index = VM_USERLO_PI;
     }
   }
 
-  // If no page found after last_allocated_page, scan from VM_USERLO_PI to
-  // last_allocated_page
-  for (i = VM_USERLO_PI; i < last_allocated_page; i++) {
-    if (at_is_norm(i) && !at_is_allocated(i)) {
-      at_set_allocated(i, 1);
-      last_allocated_page = i + 1; // Memoize the next page to check
-      return i;
-    }
+  if (palloc_free_index == nps) {
+    palloc_free_index = 0;
+    last_palloc_index = VM_USERLO_PI;
+  } else {
+    at_set_allocated(palloc_free_index, 1);
+    last_palloc_index = palloc_free_index;
   }
 
-  // No available page found
-  return 0;
+  return palloc_free_index;
 }
 
 /**
@@ -60,7 +65,4 @@ unsigned int palloc() {
  *
  * Hint: Simple.
  */
-void pfree(unsigned int pfree_index) {
-  // TODO
-  at_set_allocated(pfree_index, 0);
-}
+void pfree(unsigned int pfree_index) { at_set_allocated(pfree_index, 0); }
