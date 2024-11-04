@@ -1,5 +1,17 @@
-Compile: make / make all
-Run tests: make clean && make TEST=1
-Run in qemu: make qemu / make qemu-nox
-Debug with gdb: make qemu-gdb / make qemu-nox-gdb
-                (in another terminal) gdb
+# Physical Memory Manager
+
+The Physical Memory Manager is Divided into divided into thre layers : 
+
+**MATINTRO LAYER**
+  In This Layer we create a data structure that sotres information about our memory pages and we declare getter and setters methods for this data structure
+
+**MATINIT LAYER**
+  In This Layer initialise the data structure we created in the previous layer. We assigned reserved memory pages for the kernel and some reserved pages for BIOS. All the other pages are marked as usable and can be allocated to user programs.
+
+**MATOP Layer**
+  
+  In This Layer we define a page allocator and a page deallocator function.
+
+  The page Allocator scans all the memory pages from the last allocated page till it finds a usable page(not reserved) which is unallocated allocates that to the requesting program. 
+
+  The Page Deallocator simply marks a memory page as unallocated
